@@ -6,10 +6,12 @@ module.exports = {
 	
 	POST: function(req, res){
 		
+		console.log(' -- filePath: ' + JSON.stringify(filePath));
+			
 		// Read file and fetch all available data
 		file.read(filePath, function(data){
 		
-			console.log(' -- Read_data: ' + data);
+			console.log(' -- Read_data: ' + JSON.stringify(data));
 			
 			// Check data exist in file or not, ignoring error if file not exists and creating new file
 			if(data && data.users){

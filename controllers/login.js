@@ -20,15 +20,17 @@ module.exports = {
 			
 				if(parseValue && parseValue.tokens && parseValue.tokens.length > 0){
 					
+					var count = 0;
+					
 					parseValue.tokens
 						.forEach(function(obj){
-							
+							count++
 							// Comparing user_id(email) to requested email and check its token life, if greater then current time then provide the same
 							if(obj.user_id == req.body.email && obj.exp >= parseInt(currentTime/1000)){
 								console.log('\n -- Token already exist: ' + encryptedToken);
 								res.status(200).send({token: encryptedToken});
 							}
-							else{
+							else if(count == parseValue.tokens.length){
 								console.log('\n -- New token will created');
 								createToken(parseValue, req, res);
 							}

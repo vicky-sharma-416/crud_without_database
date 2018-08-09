@@ -3,16 +3,49 @@ var express = require('express');
 var fs = require('fs');
 var crypto = require('crypto');
 var router = express.Router();
-var db = require('./db.js');
+var auth = require('./lib/auth.js');
+
+// Middleware to sent response with headers
+router.use(function(req, res, next){
+	res.setHeader('Content-Type', 'application/json')
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	res.setHeader('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type, Authorization');
+	next();
+});
 
 // Create new user by registration endpoint
 router.post('/registration', function(req, res){
-	res.status(200).send({message: 'Regisetered successfully'});
+	controllers (req, "registration", res);
 })
 
 // Create new token by login endpoint
 router.post('/login', function(req, res){	
 	controllers (req, "login", res);
+})
+
+// Authorize/validate incoming token
+router.use(function(req, res, next){
+	if(req.headers && req.headers.authorization){
+		console.log(' -- Authorization: '+ req.headers.authorization);
+		auth(req, res, function(result){
+			console.log('-- result: ' + result)
+			next();
+		})
+	}
+	else{
+		res.status(401).end(JSON.stringify({message: 'Unauthorized'}));
+	}	
+})
+
+// Get user by id 
+router.use('/user/:id', function(req, res){
+	controllers (req, "user", res);
+})
+
+// Get all users 
+router.use('/user', function(req, res){
+	controllers (req, "user", res);
 })
 
 // Response undefined url 
@@ -29,7 +62,8 @@ router.use(function(err, req, res, next){
 // Calling controller according consumed url
 function controllers (event, fileName, res){
 	
-	console.log(' -- calling_controller: ' + './controllers/' + fileName + '.js');		
+	console.log(' -- calling_controller: ' + './controllers/' + fileName + '.js');
+		
 	try{
 		var controller = require('./controllers/' + fileName + '.js');
 	}
@@ -38,6 +72,7 @@ function controllers (event, fileName, res){
 	}	
 	controller[event.method](event, res);
 }
+
 
 module.exports = router;
 
