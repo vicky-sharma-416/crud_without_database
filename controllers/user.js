@@ -6,7 +6,69 @@ var filePath = './dbfiles/users.json';
 module.exports = {
 	
 	POST: function(req, res){		
-		res.status(405).send({message: 'Method not allowed.'});
+		//res.status(405).send({message: 'Method not allowed.'});
+		// Read file and sent response to  its callback
+		return new Promise(function(resolve, reject){ 
+			file.read(filePath, function(result){
+				
+				console.log(' -- result: ' + (result ? JSON.stringify(result) : result.message));
+					
+				if(result && result.message){
+					reject({statusCode: 500, message: result.message})
+				}
+				else if(result.emails.indexOf(req.body.email) != -1){
+					reject({statusCode: 400, message: 'User with this email already exist, please use another one'})
+				}
+				else{
+					//readCallback(result, req, res, handledResponse);
+					resolve(result);
+				}
+			})	
+		})
+		.then(function(response){
+			
+			console.log('\n\n response: ', response);
+			
+			req.body.id = 1;
+			
+			if(response.users.length > 0){
+				req.body.id = response.users.length + 1;
+			}
+			
+			response.users.push(req.body);
+			response.emails.push(req.body.email);
+			
+			// Create file with requested data
+			file.create(filePath, response, function(output){
+				if (output && output.message){
+					res.status(500).send(output);
+				}
+				else{
+					delete output.emails;
+					res.status(201).send({user: output.users[(output.users.length-1)]});
+				}
+			})
+		})
+		.catch(function(error){
+			console.log('\n\n error: ', error);
+			res.status(error.statusCode).send({message: error.message});
+		})
+		/*
+		var obj = {};
+		
+		obj.users.push(req.body);
+		obj.emails.push(req.body.email);
+		
+		// Create file with requested data
+		fs.appendFile(filePath, JSON.stringify(obj), function(output){
+			console.log('\n\n output: ' + JSON.stringify(output));
+			if (output && output.message){
+				res.status(500).send(output);
+			}
+			else{
+				res.status(201).send(output);
+			}
+		})*/
 	},
 	
 	GET: function(req, res){
@@ -121,6 +183,7 @@ function readCallback(output, req, res, callback){
 			array.push(obj);
 		callback(array, res);
 	}
+	// TODO :: need to handled unexpected delete file during running server and if user not exist as well
 	else if(output.users && output.users.length > 0){						
 		
 		var isRecordExist = false;
@@ -128,6 +191,8 @@ function readCallback(output, req, res, callback){
 		
 		output.users
 			.forEach(function(obj){
+				
+				console.log('\n\n obj: ' + JSON.stringify(obj))
 				
 				// Belong to pathParameters url like get/id, put/id, delete/id
 				if(req.params.id == obj.id){

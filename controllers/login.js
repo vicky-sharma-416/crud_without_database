@@ -11,7 +11,10 @@ var encryptedToken = null;
 
 module.exports = {
 	
-	POST: function(req, res){		
+	POST: function(req, res){
+		
+		console.log(req.body)
+		
 		file.read(filePath, function(parseValue){
 			
 			if(parseValue && parseValue.users){
@@ -51,8 +54,11 @@ function createToken(parseValue, req, res){
 	parseValue.users
 		.forEach(function(elements){
 			
+			console.log(elements.email + ' == ' + req.body.email);
+				
 			// Get each value comparison with requested body value 
-			if(elements.email == req.body.email && elements.password == req.body.password){			
+			//if(elements.email == req.body.email && elements.password == req.body.password){			
+			if(elements.email == req.body.email){
 				console.log('\n -- User credentials found');
 				
 				// Append token table/key if not exist
