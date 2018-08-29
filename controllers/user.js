@@ -8,6 +8,7 @@ module.exports = {
 	POST: function(req, res){		
 		//res.status(405).send({message: 'Method not allowed.'});
 		// Read file and sent response to  its callback
+		console.log(' -- body: ' + JSON.stringify(req.body));
 		return new Promise(function(resolve, reject){ 
 			file.read(filePath, function(result){
 				
@@ -16,7 +17,7 @@ module.exports = {
 				if(result && result.message){
 					reject({statusCode: 500, message: result.message})
 				}
-				else if(result.emails.indexOf(req.body.email) != -1){
+				else if(result && result.emails && result.emails.indexOf(req.body.email) != -1){
 					reject({statusCode: 400, message: 'User with this email already exist, please use another one'})
 				}
 				else{
@@ -27,13 +28,17 @@ module.exports = {
 		})
 		.then(function(response){
 			
-			console.log('\n\n response: ', response);
+			console.log(' -- response: ', response);
 			
-			req.body.id = 1;
-			
-			if(response.users.length > 0){
+			if(response.length > 0 && response.users && response.users.length > 0){
 				req.body.id = response.users.length + 1;
 			}
+			else{				
+				req.body.id = 1;
+				response = {};
+				response.users = [];
+				response.emails = [];
+			}			
 			
 			response.users.push(req.body);
 			response.emails.push(req.body.email);
